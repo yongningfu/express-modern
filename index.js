@@ -21,48 +21,43 @@ const hasCatch = p =>
 
 const slice = [].slice;
 
+
 /**
- * modern
- *
- * 1. normal fn
- * 2. async function
- * 3. generator function
+ * factory
  */
 
-const modern = module.exports = function express_modern(fn) {
-  // args length
-  const len = fn.length;
+const modernFactory = function modernFactory(makeRet) {
+  return function modern(fn) {
+    // generator function
+    if (isGeneratorFunction(fn)) fn = co.wrap(fn);
 
-  // generator function
-  if (isGeneratorFunction(fn)) fn = co.wrap(fn);
-
-  if (len === 4) {
-    return function(err, req, res, next) {
-      // normal case
-      if (typeof next === 'function') {
-        return run.call(this, next, slice.call(arguments));
-      };
-
-      // router.params('user', (req, res, next, user)=>{ ... })
-      if (typeof res === 'function') {
-        let _next = res;
-        return run.call(this, _next, slice.call(arguments));
+    return makeRet(function(next, args) {
+      try {
+        const ret = fn.apply(this, args); // call
+        if (hasCatch(ret)) ret.catch(next); // catch
+      } catch (e) {
+        next(e);
       }
-
-      throw new TypeError('unsupported arguments type');
-    };
-  } else {
-    return function(req, res, next) {
-      run.call(this, next, slice.call(arguments));
-    };
-  }
-
-  function run(next, args) {
-    try {
-      const ret = fn.apply(this, args); // call
-      if (hasCatch(ret)) ret.catch(next); // catch
-    } catch (e) {
-      next(e);
-    }
+    });
   }
 };
+
+/**
+ * case1 `req, res, next`
+ */
+
+exports = module.exports = modernFactory(function(executor) {
+  return function(req, res, next) {
+    executor.call(this, next, slice.call(arguments));
+  };
+});
+
+/**
+ * case2 `err, req, res, next`
+ */
+
+exports.err = modernFactory(function(executor) {
+  return function(err, req, res, next) {
+    executor.call(this, next, slice.call(arguments));
+  };
+});

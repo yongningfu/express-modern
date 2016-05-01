@@ -27,7 +27,7 @@ describe('Generator', function() {
       throw new Error('boom in gen');
     }));
 
-    app.use(modern(function * (err, req, res, next) {
+    app.use(modern.err(function * (err, req, res, next) {
       res.status(500);
       res.send(err.message.split(/ /)[0]);
     }));
@@ -45,7 +45,7 @@ describe('Generator', function() {
       throw new Error('boom');
     }));
 
-    app.use(modern(function * (err, req, res, next) {
+    app.use(modern.err(function * (err, req, res, next) {
       res.send(err.message);
     }));
 
@@ -76,7 +76,7 @@ describe('Normal function', function() {
       throw new Error('normal error');
     }));
 
-    app.use(modern((err, req, res, next) => {
+    app.use(modern.err((err, req, res, next) => {
       res.send(err.message);
     }));
 

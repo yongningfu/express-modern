@@ -27,7 +27,7 @@ describe('Async', function() {
       throw new Error('boom');
     }));
 
-    app.use(modern(async function(err, req, res, next){
+    app.use(modern.err(async function(err, req, res){
       res.status(500);
       res.send(err.message);
     }));
